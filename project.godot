@@ -46,7 +46,6 @@ _global_script_class_icons={
 
 config/name="DeltaruneGodot"
 run/main_scene="res://scripts/test.tscn"
-run/disable_stdout=true
 config/icon="res://icon.png"
 
 [autoload]

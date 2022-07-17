@@ -27,7 +27,7 @@ script = ExtResource( 5 )
 position = Vector2( 321, 171 )
 
 [node name="soul" parent="." instance=ExtResource( 3 )]
-position = Vector2( 321, 235 )
+position = Vector2( 320, 137 )
 test_soul_mode = 1
 
 [node name="KinematicBody2D2" parent="." instance=ExtResource( 1 )]

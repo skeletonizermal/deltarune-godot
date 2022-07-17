@@ -3,7 +3,7 @@ extends Control
 var font:= preload("res://some_fonts/font.tres")
 
 func _draw():
-	draw_char(font,position)
+	draw_char(Global.font,Vector2(100,100),'a','')
 
 var skip_button_held_down:=false
 var proceed_button_held_down:=false

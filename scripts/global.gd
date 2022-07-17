@@ -14,6 +14,8 @@ var inv_frames:=false
 var tension:=0.0
 var tensionselect:=0
 
+var font:=preload("res://some_fonts/bigfont.tres")
+
 func random_target():
 	var a=[]
 	randomize()
