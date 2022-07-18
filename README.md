@@ -1,6 +1,3 @@
-
-ahhh no dont look at my crappy code enooooes
-
 #DELTARUNE GODOT
 
 Yep. A recreation/remake of deltarune in godot.
