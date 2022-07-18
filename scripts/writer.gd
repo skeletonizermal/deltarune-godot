@@ -42,7 +42,7 @@ func _draw():
 	var skipme:bool
 	if skip_button_held_down:
 		skipme=true
-	while i<=maxi:
+	while i<maxi:
 		var accept:=true
 		curchar=string[i]
 		nextchar=''
@@ -73,14 +73,25 @@ func _draw():
 			if nextchar=='%':
 				queue_free()
 			elif halt!=2:
-				Global.nextmsg()
+				Global.nextmsg(self)
+		if curchar=='\\':
+			accept=false
+			i+=2
+			if nextchar=='s':
+				if nextchar2=='0' and skipme:
+					skipme=true
+				elif nextchar2=='1':
+					skipme=false
+		if curchar=='^':
+			accept=false
+			i+=1
 		if accept:
 			draw_char_custom(curchar,Global.font)
 		i+=1
 	if proceed_button_held_down:
 		match halt:
 			1:
-				Global.nextmsg()
+				Global.nextmsg(self)
 			2:
 				queue_free()
 	if skipme:
@@ -101,6 +112,11 @@ func _ready():
 func _process(delta):
 	update()
 
+func next_msg():
+	maxi=0
+	halt=0
+	$Timer.start(0.01)
+
 var skip_button_held_down:=false
 var proceed_button_held_down:=false
 var automash_timer:=0
@@ -118,10 +134,12 @@ func _input(event):
 
 
 func _on_Timer_timeout():
-	if maxi<len(Global.msg)-2:
+	print('what')
+	if maxi<len(Global.msg):
+		print('hi')
 		var cchar:=Global.msg[maxi]
 		var nchar:=''
-		if maxi<len(Global.msg)-3:
+		if maxi<len(Global.msg)-1:
 			nchar=Global.msg[maxi+1]
 		if cchar=='/':
 			halt=1
@@ -129,8 +147,7 @@ func _on_Timer_timeout():
 		if cchar=='|':
 			maxi+=1
 		if cchar=='^':
-			maxi+=2
-			if $Timer.time_left>0.0:
+			if $Timer.time_left>=0.0:
 				match int(nchar):
 					1:
 						$Timer.start($Timer.time_left+5.0/30.0)
@@ -150,6 +167,7 @@ func _on_Timer_timeout():
 						$Timer.start($Timer.time_left+90.0/30.0)
 					9:
 						$Timer.start($Timer.time_left+150.0/30.0)
+				print($Timer.time_left)
 		maxi+=1
-		if cchar!='/':
+		if cchar!='/' and $Timer.time_left==0.0:
 			$Timer.start(max(float(rate)/30.0,0.01))

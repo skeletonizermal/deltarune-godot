@@ -29,6 +29,7 @@ position = Vector2( 321, 171 )
 [node name="soul" parent="." instance=ExtResource( 3 )]
 position = Vector2( 320, 137 )
 test_soul_mode = 1
+orange_soul_main_axis_is_up = true
 
 [node name="KinematicBody2D2" parent="." instance=ExtResource( 1 )]
 position = Vector2( 248, 131 )
