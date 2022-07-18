@@ -18,7 +18,6 @@ var maxed:=false
 var bigfont:=preload("res://some_fonts/bigfont.tres")
 
 func _draw():
-	print(Global.tension)
 	draw_rect(Rect2(43,46.0,19,187),Color("#800000"))
 	if (abs((apparent - Global.tension)) < 20):
 		apparent=Global.tension
@@ -76,7 +75,7 @@ func _draw():
 			draw_rect(Rect2(43, theight2, (0 + 19.0), theight), Color(0.25,0.25,0.25,0.7))
 		else:
 			draw_rect(Rect2(43, theight2, (0 + 19.0), theight), Color(1,1,1,alpha))
-	if (apparent > 20 and apparent < 100.0):
+	if (apparent > 0.0 and apparent < 100.0):
 		draw_rect(Rect2( 43, 46+187- ((current / 100.0) * 187.0),19.0,2.0),Color.white)
 	var tamt = floor(((apparent / 100.0) * 100.0))
 	if tamt<100:

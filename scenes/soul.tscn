@@ -93,7 +93,7 @@ colors = PoolColorArray( 1, 1, 1, 0.505882, 1, 1, 1, 0 )
 _data = [ Vector2( 0, 0.0147727 ), 0.0, 3.45882, 0, 0, Vector2( 0.659091, 0.878409 ), 0.523077, 0.0, 0, 0 ]
 
 [sub_resource type="Gradient" id=11]
-colors = PoolColorArray( 1, 1, 1, 0.12549, 1, 1, 1, 0 )
+colors = PoolColorArray( 1, 1, 1, 0.188235, 1, 1, 1, 0 )
 
 [sub_resource type="RectangleShape2D" id=9]
 extents = Vector2( 14, 14 )
@@ -239,5 +239,3 @@ shape = SubResource( 13 )
 
 [connection signal="body_entered" from="parry" to="." method="_on_parry_body_entered"]
 [connection signal="body_exited" from="parry" to="." method="_on_parry_body_exited"]
-[connection signal="body_entered" from="hit_wall" to="." method="_on_hit_wall_body_entered"]
-[connection signal="body_entered" from="hit_wall_hor" to="." method="_on_hit_wall_hor_body_entered"]

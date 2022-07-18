@@ -22,7 +22,7 @@ var orange_soul_graphic:=preload("res://sprites/spr_heartorange.png")
 var blue_soul_graphic:=preload("res://sprites/spr_heartblue.png")
 var aqua_soul_graphic:=preload("res://sprites/spr_heartaqua.png")
 
-const parry_frames_max = 60.0
+const parry_frames_max = 30.0
 
 var blue_soul_direction:=Vector2(0,-1) #specifies the "UP" of the blue soul.
 
@@ -31,15 +31,22 @@ var orange_soul_slow_down:=0
 
 func change_soul_type(type:int):
 	match type:
+		soul_modes.RED:
+			$Sprite.texture=red_soul_graphic
+			soul_mode=soul_modes.RED
+			$grazebox/Sprite2.modulate=Color(1.0,0.8,0.8,0.0)
 		soul_modes.BLUE:
 			$Sprite.texture=blue_soul_graphic
 			soul_mode=soul_modes.BLUE
+			$grazebox/Sprite2.modulate=Color(0.8,0.8,1.0,0.0)
 		soul_modes.AQUA:
 			$Sprite.texture=aqua_soul_graphic
 			soul_mode=soul_modes.AQUA
+			$grazebox/Sprite2.modulate=Color(0.8,1.0,1.0,0.0)
 		soul_modes.ORANGE:
 			$Sprite.texture=orange_soul_graphic
 			soul_mode=soul_modes.ORANGE
+			$grazebox/Sprite2.modulate=Color(1.0,0.92,0.8,0.0)
 			$CPUParticles2D4.emitting=true
 			if orange_soul_main_axis_is_up:
 				velocity.y=200
@@ -49,17 +56,20 @@ func change_soul_type(type:int):
 func _ready():
 	change_soul_type(test_soul_mode)
 
+var mem_orange_vel:=Vector2.ZERO
+
 signal ground_pound()
 var ground_pound_inv:=false
+
+var orange_charge_frames:=0
+var memrot:=0.0
 
 func _physics_process(delta):
 	Global.inv_frames=inv_frames
 	if not dead:
 		velocity=get_input()
-		print(velocity)
 		var temp_vel:=velocity
-		velocity=move_and_slide(velocity,blue_soul_direction)
-		print(velocity)
+		velocity=move_and_slide(velocity,blue_soul_direction if soul_mode==soul_modes.BLUE else (Vector2(-1,0) if orange_soul_main_axis_is_up else Vector2(0,-1)))
 		position=position.round()
 		match soul_mode:
 			soul_modes.BLUE:
@@ -117,12 +127,60 @@ func _physics_process(delta):
 				if parry_attempt_frames>0:
 					parry_attempt_frames-=1
 			soul_modes.ORANGE:
-				if not orange_soul_nudging:
-					print('uh')
+				var collided:=false
+				if orange_soul_main_axis_is_up:
+					if abs(velocity.y)>200:
+						velocity.y-=10*sign(velocity.y)
+				else:
+					if abs(velocity.x)>200:
+						velocity.x-=10*sign(velocity.x)
+				if is_on_wall():
+					if orange_soul_main_axis_is_up:
+						velocity.y=temp_vel.y*-1.0
+					else:
+						velocity.x=temp_vel.x*-1.0
+				if not orange_soul_nudging and not velocity.is_equal_approx(Vector2.ZERO):
 					if orange_soul_main_axis_is_up:
 						velocity.x-=sign(velocity.x)*1
 					else:
 						velocity.y-=sign(velocity.y)*1
+				if Input.is_action_just_pressed("ui_accept"):
+					mem_orange_vel=velocity
+					memrot=$Sprite.rotation
+				if Input.is_action_pressed("ui_accept"):
+					if velocity.is_equal_approx(Vector2.ZERO):
+						orange_charge_frames=min(orange_charge_frames+1,30)
+					if orange_soul_main_axis_is_up:
+						velocity.y-=10*sign(velocity.y)
+						velocity.x*=0.2
+					else:
+						velocity.x-=10*sign(velocity.x)
+					$Sprite2.modulate.a=float(min(orange_charge_frames,15))/15.0*0.5
+				if not velocity.is_equal_approx(Vector2.ZERO):
+					print(velocity)
+					if not $CPUParticles2D4.emitting:
+						$CPUParticles2D4.emitting=true
+					$Sprite.rotation=atan2(velocity.y,velocity.x)-PI/2.0
+					memrot=$Sprite.rotation
+				else:
+					$Sprite.rotation=memrot
+					if $CPUParticles2D4.emitting:
+						$CPUParticles2D4.emitting=false
+				$Sprite2.rotation=$Sprite.rotation
+				$grazebox/Sprite.rotation=$Sprite.rotation
+				$grazebox/Sprite2.rotation=$Sprite.rotation
+				$CPUParticles2D4.angle=rad2deg($Sprite.rotation)
+				if orange_charge_frames==30:
+					Input.action_release("ui_accept")
+				if Input.is_action_just_released("ui_accept"):
+					$Sprite2.modulate.a=0
+					var temprot=$Sprite.rotation+PI/2.0
+					if orange_soul_main_axis_is_up:
+						print(sign(sin($Sprite.rotation)))
+						velocity.y=(200+20*min(orange_charge_frames,15))*ceil(abs(sin(temprot)))*sign(sin(temprot))
+					else:
+						velocity.x=(200+20*min(orange_charge_frames,15))*ceil(abs(cos(temprot)))*sign(cos(temprot))
+					orange_charge_frames=0
 		moving= velocity!=Vector2(0,0)
 
 var ground_pound_delay:=0
@@ -158,6 +216,8 @@ func damage(source):
 			get_tree().paused=true
 			dead=true
 			$Sprite2.hide()
+			$Sprite.rotation=0
+			
 			$CPUParticles2D2.hide()
 			$CPUParticles2D3.hide()
 			$CPUParticles2D4.hide()
@@ -196,7 +256,7 @@ func get_input():
 					if blue_soul_direction.y==-1 and is_on_floor() and ground_pound_delay==0:
 						out.x=-6
 			soul_modes.ORANGE:
-				if orange_soul_main_axis_is_up and velocity.x<=30:
+				if orange_soul_main_axis_is_up and velocity.x<=30 and not Input.is_action_pressed("ui_accept"):
 					orange_soul_nudging=true
 					velocity.x+=5
 					velocity.x=min(velocity.x,30)
@@ -215,7 +275,7 @@ func get_input():
 					if blue_soul_direction.x==-1 and is_on_floor() and ground_pound_delay==0:
 						out.x=-6
 			soul_modes.ORANGE:
-				if orange_soul_main_axis_is_up and velocity.x<=30:
+				if orange_soul_main_axis_is_up and velocity.x<=30 and not Input.is_action_pressed("ui_accept"):
 					orange_soul_nudging=true
 					velocity.x+=5
 					velocity.x=min(velocity.x,30)
@@ -234,7 +294,7 @@ func get_input():
 					if blue_soul_direction.x==-1 and is_on_floor() and ground_pound_delay==0:
 						out.x=-6
 			soul_modes.ORANGE:
-				if orange_soul_main_axis_is_up and velocity.x>=-30:
+				if orange_soul_main_axis_is_up and velocity.x>=-30 and not Input.is_action_pressed("ui_accept"):
 					orange_soul_nudging=true
 					velocity.x-=5
 					velocity.x=max(velocity.x,-30)
@@ -253,7 +313,7 @@ func get_input():
 					if blue_soul_direction.x==-1 and is_on_floor() and ground_pound_delay==0:
 						out.x=-6
 			soul_modes.ORANGE:
-				if orange_soul_main_axis_is_up and velocity.x>=-30:
+				if orange_soul_main_axis_is_up and velocity.x>=-30 and not Input.is_action_pressed("ui_accept"):
 					orange_soul_nudging=true
 					velocity.x-=5
 					velocity.x=max(velocity.x,-30)
@@ -272,7 +332,7 @@ func get_input():
 					if blue_soul_direction.x==-1 and is_on_floor() and ground_pound_delay==0:
 						out.y=-6
 			soul_modes.ORANGE:
-				if not orange_soul_main_axis_is_up and velocity.y<=30:
+				if not orange_soul_main_axis_is_up and velocity.y<=30 and not Input.is_action_pressed("ui_accept"):
 					orange_soul_nudging=true
 					velocity.y+=5
 					velocity.y=min(velocity.y,30)
@@ -291,7 +351,7 @@ func get_input():
 					if blue_soul_direction.y==-1 and is_on_floor() and ground_pound_delay==0:
 						out.y=-6
 			soul_modes.ORANGE:
-				if not orange_soul_main_axis_is_up and velocity.y<=30:
+				if not orange_soul_main_axis_is_up and velocity.y<=30 and not Input.is_action_pressed("ui_accept"):
 					orange_soul_nudging=true
 					velocity.y+=5
 					velocity.y=min(velocity.y,30)
@@ -305,12 +365,12 @@ func get_input():
 				if blue_soul_direction.x!=0:
 					out.y=-ceil(Input.get_action_strength("ui_up"))
 				if blue_soul_direction.y==-1:
-					if blue_soul_direction.y!=0:
+					if blue_soul_direction.x!=0:
 						out.y=-ceil(Input.get_action_strength("ui_up"))
 					if blue_soul_direction.y==-1 and is_on_floor() and ground_pound_delay==0:
 						out.y=-6
 			soul_modes.ORANGE:
-				if not orange_soul_main_axis_is_up and velocity.y>=-30:
+				if not orange_soul_main_axis_is_up and velocity.y>=-30 and not Input.is_action_pressed("ui_accept"):
 					orange_soul_nudging=true
 					velocity.y-=5
 					velocity.y=max(velocity.y,-30)
@@ -327,9 +387,9 @@ func get_input():
 					if blue_soul_direction.x!=0:
 						out.y=-1
 					if blue_soul_direction.y==-1 and is_on_floor() and ground_pound_delay==0:
-						out.y=--6
+						out.y=-6
 			soul_modes.ORANGE:
-				if not orange_soul_main_axis_is_up and velocity.y>=-30:
+				if not orange_soul_main_axis_is_up and velocity.y>=-30 and not Input.is_action_pressed("ui_accept"):
 					orange_soul_nudging=true
 					velocity.y-=5
 					velocity.y=max(velocity.y,-30)
@@ -339,6 +399,10 @@ func get_input():
 		soul_modes.AQUA:
 			return out*(60)
 		soul_modes.ORANGE:
+			if abs(velocity.x)<1:
+				velocity.x=0
+			if abs(velocity.y)<1:
+				velocity.y=0
 			return velocity
 		soul_modes.BLUE:
 			if blue_soul_direction.y!=0:
@@ -388,12 +452,12 @@ func _on_parry_body_exited(body):
 
 
 func _on_hit_wall_body_entered(body):
-	if orange_soul_main_axis_is_up:
+	if orange_soul_main_axis_is_up and soul_mode==soul_modes.ORANGE:
 		print('HELLO!',sign(velocity.y))
 		velocity.y=sign(velocity.y)*-200
 
 
 func _on_hit_wall_hor_body_entered(body):
-	if not orange_soul_main_axis_is_up:
+	if not orange_soul_main_axis_is_up and soul_mode==soul_modes.ORANGE:
 		print('HELLO!',sign(velocity.x))
 		velocity.x=sign(velocity.x)*-200

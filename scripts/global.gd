@@ -13,6 +13,7 @@ var grazetimefactor:=1.0
 var inv_frames:=false
 var tension:=0.0
 var tensionselect:=0
+var msg:='"MIX." WHAT A NAME LOL!!!!!!&WE CAN DO THIS. TOO./'
 
 var font:=preload("res://some_fonts/bigfont.tres")
 
@@ -31,3 +32,8 @@ func tensionheal(amount):
 	tension+=amount
 	if tension>=100:
 		tension=100
+
+func nextmsg():
+	Writer.maxi=0
+	msg="THIS IS ANOTHER MESSAGE. WOWZA./"
+	
