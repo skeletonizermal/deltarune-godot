@@ -63,6 +63,7 @@ var ground_pound_inv:=false
 
 var orange_charge_frames:=0
 var memrot:=0.0
+var remember_rot:=false
 
 func _physics_process(delta):
 	Global.inv_frames=inv_frames
@@ -137,8 +138,10 @@ func _physics_process(delta):
 				if is_on_wall():
 					if orange_soul_main_axis_is_up:
 						velocity.y=temp_vel.y*-1.0
+						memrot=atan2(velocity.y,velocity.x)-PI/2.0
 					else:
 						velocity.x=temp_vel.x*-1.0
+						memrot=atan2(velocity.y,velocity.x)-PI/2.0
 				if not orange_soul_nudging and not velocity.is_equal_approx(Vector2.ZERO):
 					if orange_soul_main_axis_is_up:
 						velocity.x-=sign(velocity.x)*1
@@ -146,33 +149,39 @@ func _physics_process(delta):
 						velocity.y-=sign(velocity.y)*1
 				if Input.is_action_just_pressed("ui_accept"):
 					mem_orange_vel=velocity
-					memrot=$Sprite.rotation
+					if orange_soul_nudging:
+						memrot=$Sprite.rotation
+						remember_rot=true
 				if Input.is_action_pressed("ui_accept"):
 					if velocity.is_equal_approx(Vector2.ZERO):
-						orange_charge_frames=min(orange_charge_frames+1,30)
+						orange_charge_frames=min(orange_charge_frames+1,35)
 					if orange_soul_main_axis_is_up:
 						velocity.y-=10*sign(velocity.y)
-						velocity.x*=0.2
+						velocity.x-=ceil(0.8*velocity.x)
 					else:
 						velocity.x-=10*sign(velocity.x)
-					$Sprite2.modulate.a=float(min(orange_charge_frames,15))/15.0*0.5
+						velocity.y-=ceil(0.8*velocity.y)
+					$Sprite2.modulate.a=float(min(orange_charge_frames,15-13*int(orange_charge_frames%2==0 and orange_charge_frames>20)))/15.0*0.5
 				if not velocity.is_equal_approx(Vector2.ZERO):
 					print(velocity)
 					if not $CPUParticles2D4.emitting:
 						$CPUParticles2D4.emitting=true
 					$Sprite.rotation=atan2(velocity.y,velocity.x)-PI/2.0
-					memrot=$Sprite.rotation
+					if remember_rot:
+						$Sprite.rotation=memrot
 				else:
-					$Sprite.rotation=memrot
+					if remember_rot:
+						$Sprite.rotation=memrot
 					if $CPUParticles2D4.emitting:
 						$CPUParticles2D4.emitting=false
 				$Sprite2.rotation=$Sprite.rotation
 				$grazebox/Sprite.rotation=$Sprite.rotation
 				$grazebox/Sprite2.rotation=$Sprite.rotation
 				$CPUParticles2D4.angle=rad2deg($Sprite.rotation)
-				if orange_charge_frames==30:
+				if orange_charge_frames==35:
 					Input.action_release("ui_accept")
 				if Input.is_action_just_released("ui_accept"):
+					remember_rot=false
 					$Sprite2.modulate.a=0
 					var temprot=$Sprite.rotation+PI/2.0
 					if orange_soul_main_axis_is_up:
@@ -256,7 +265,7 @@ func get_input():
 					if blue_soul_direction.y==-1 and is_on_floor() and ground_pound_delay==0:
 						out.x=-6
 			soul_modes.ORANGE:
-				if orange_soul_main_axis_is_up and velocity.x<=30 and not Input.is_action_pressed("ui_accept"):
+				if orange_soul_main_axis_is_up and velocity.x<=30 and not is_zero_approx(velocity.y):
 					orange_soul_nudging=true
 					velocity.x+=5
 					velocity.x=min(velocity.x,30)
@@ -275,7 +284,7 @@ func get_input():
 					if blue_soul_direction.x==-1 and is_on_floor() and ground_pound_delay==0:
 						out.x=-6
 			soul_modes.ORANGE:
-				if orange_soul_main_axis_is_up and velocity.x<=30 and not Input.is_action_pressed("ui_accept"):
+				if orange_soul_main_axis_is_up and velocity.x<=30 and not is_zero_approx(velocity.y):
 					orange_soul_nudging=true
 					velocity.x+=5
 					velocity.x=min(velocity.x,30)
@@ -294,7 +303,7 @@ func get_input():
 					if blue_soul_direction.x==-1 and is_on_floor() and ground_pound_delay==0:
 						out.x=-6
 			soul_modes.ORANGE:
-				if orange_soul_main_axis_is_up and velocity.x>=-30 and not Input.is_action_pressed("ui_accept"):
+				if orange_soul_main_axis_is_up and velocity.x>=-30 and not is_zero_approx(velocity.y):
 					orange_soul_nudging=true
 					velocity.x-=5
 					velocity.x=max(velocity.x,-30)
@@ -313,7 +322,7 @@ func get_input():
 					if blue_soul_direction.x==-1 and is_on_floor() and ground_pound_delay==0:
 						out.x=-6
 			soul_modes.ORANGE:
-				if orange_soul_main_axis_is_up and velocity.x>=-30 and not Input.is_action_pressed("ui_accept"):
+				if orange_soul_main_axis_is_up and velocity.x>=-30 and not is_zero_approx(velocity.y):
 					orange_soul_nudging=true
 					velocity.x-=5
 					velocity.x=max(velocity.x,-30)
@@ -332,7 +341,7 @@ func get_input():
 					if blue_soul_direction.x==-1 and is_on_floor() and ground_pound_delay==0:
 						out.y=-6
 			soul_modes.ORANGE:
-				if not orange_soul_main_axis_is_up and velocity.y<=30 and not Input.is_action_pressed("ui_accept"):
+				if not orange_soul_main_axis_is_up and velocity.y<=30 and not is_zero_approx(velocity.x):
 					orange_soul_nudging=true
 					velocity.y+=5
 					velocity.y=min(velocity.y,30)
@@ -351,7 +360,7 @@ func get_input():
 					if blue_soul_direction.y==-1 and is_on_floor() and ground_pound_delay==0:
 						out.y=-6
 			soul_modes.ORANGE:
-				if not orange_soul_main_axis_is_up and velocity.y<=30 and not Input.is_action_pressed("ui_accept"):
+				if not orange_soul_main_axis_is_up and velocity.y<=30 and not is_zero_approx(velocity.x):
 					orange_soul_nudging=true
 					velocity.y+=5
 					velocity.y=min(velocity.y,30)
@@ -370,7 +379,7 @@ func get_input():
 					if blue_soul_direction.y==-1 and is_on_floor() and ground_pound_delay==0:
 						out.y=-6
 			soul_modes.ORANGE:
-				if not orange_soul_main_axis_is_up and velocity.y>=-30 and not Input.is_action_pressed("ui_accept"):
+				if not orange_soul_main_axis_is_up and velocity.y>=-30 and not is_zero_approx(velocity.x):
 					orange_soul_nudging=true
 					velocity.y-=5
 					velocity.y=max(velocity.y,-30)
@@ -389,7 +398,7 @@ func get_input():
 					if blue_soul_direction.y==-1 and is_on_floor() and ground_pound_delay==0:
 						out.y=-6
 			soul_modes.ORANGE:
-				if not orange_soul_main_axis_is_up and velocity.y>=-30 and not Input.is_action_pressed("ui_accept"):
+				if not orange_soul_main_axis_is_up and velocity.y>=-30 and not is_zero_approx(velocity.x):
 					orange_soul_nudging=true
 					velocity.y-=5
 					velocity.y=max(velocity.y,-30)

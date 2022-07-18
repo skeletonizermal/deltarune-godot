@@ -13,7 +13,7 @@ var grazetimefactor:=1.0
 var inv_frames:=false
 var tension:=0.0
 var tensionselect:=0
-var msg:='"MIX." WHAT A NAME LOL!!!!!!&WE CAN DO THIS. TOO./'
+var msg:='"MIX." WHAT A NAME LOL!!!!!!WE CAN DO THIS. TOO./'
 var msgqueue:=PoolStringArray([
 	"HM. GET OFF THE COMPUTER&FOR ABOUT A MINUTE. \\s1 ^9^9^9^9^9^9^9^9^9^9^9^9%",
 	"WELCOME BACK, NERD.",

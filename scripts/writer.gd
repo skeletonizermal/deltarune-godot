@@ -34,15 +34,20 @@ var nextchar2:=''
 var prevchar:=''
 var prevchar2:=''
 
+var charline:=33
+
 func _draw():
 	char_pos=writing_pos
+	var cid:=1
 	var string=Global.msg
 	var i:=0
 	halt=0
+	var linecount:=1
 	var skipme:bool
+	var length:=maxi
 	if skip_button_held_down:
 		skipme=true
-	while i<maxi:
+	while i<length:
 		var accept:=true
 		curchar=string[i]
 		nextchar=''
@@ -58,7 +63,9 @@ func _draw():
 		if i>2:
 			prevchar2=string[i-2]
 		if curchar=='&':
+			print('what')
 			accept=false
+			linecount+=1
 			char_pos.x=writing_pos.x
 			char_pos.y+=vspace
 		if curchar=='/':
@@ -87,7 +94,15 @@ func _draw():
 			i+=1
 		if accept:
 			draw_char_custom(curchar,Global.font)
+			print(cid)
+			cid+=1
+			if cid>=charline:
+				string=string.insert(i+1,'&')
+				print(string)
+				length+=1
+				cid=1
 		i+=1
+		
 	if proceed_button_held_down:
 		match halt:
 			1:
